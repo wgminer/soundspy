@@ -1,0 +1,35 @@
+{
+  "name": "sound-spy",
+  "version": "0.0.0",
+  "manifest_version": 2,
+  "icons": {
+    "16": "img/icon16.png",
+    "48": "img/icon48.png",
+    "128": "img/icon128.png"
+  },
+  "default_locale": "en",
+  "background": {
+    "scripts": [
+      "js/background.js"
+    ],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_icon": "img/icon19.png",
+    "default_title": "Sound Spy",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "https://soundcloud.com/"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://soundcloud.com/*"
+      ],
+      "js": [
+        "js/inject.js"
+      ]
+    }
+  ]
+}
