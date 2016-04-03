@@ -6,6 +6,8 @@ var sass = require('gulp-sass');
 var ngAnnotate = require('gulp-ng-annotate');
 var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
+var browserSync = require('browser-sync').create();
+
 
 gulp.task('img', function() {
     return gulp.src(['./src/img/**/*'])
@@ -46,42 +48,42 @@ gulp.task('jade', function() {
         .pipe(gulp.dest('./build'));
 });
 
-gulp.task('backgroundjs', function () {
+gulp.task('js', function () {
 
     var scripts = [ 
         './libs/jquery/dist/jquery.js',
         './libs/lodash/lodash.js',
-        // './libs/firebase/firebase.js',
-        // './libs/angular/angular.js',
-        // './libs/angularfire/dist/angularfire.js',
-        './src/js/background.js'
-    ];
-
-    return gulp.src(scripts)
-        .pipe(ngAnnotate())
-        // .pipe(uglify())
-        .pipe(concat('background.js'))
-        .pipe(gulp.dest('./build/js'))
-});
-
-gulp.task('injectjs', function () {
-
-    var scripts = [ 
-        './libs/jquery/dist/jquery.min.js',
-        './libs/lodash/dist/lodash.min.js',
-        // './libs/firebase/firebase.js',
-        // './libs/angular/angular.min.js',
-        // './libs/angularfire/dist/angularfire.min.js',
-        './src/js/inject.js'
+        './libs/firebase/firebase.js',
+        './libs/angular/angular.js',
+        './libs/angularfire/dist/angularfire.js',
+        './libs/moment/moment.js',
+        './libs/angular-moment/dist/angular-moment.js',
+        './libs/angular-ui-router/release/angular-ui-router.js',
+        './src/js/*.js'
     ];
 
     return gulp.src(scripts)
         // .pipe(ngAnnotate())
         // .pipe(uglify())
-        .pipe(concat('inject.js'))
-        .pipe(gulp.dest('./build/js'))
+        .pipe(gulp.dest('./build/js'));
 });
 
+gulp.task('js.min', function () {
+
+    var scripts = [ 
+        './libs/jquery/dist/jquery.js',
+        './libs/lodash/lodash.js',
+        './libs/firebase/firebase.js',
+        './libs/angular/angular.js',
+        './libs/angularfire/dist/angularfire.js',
+        './src/js/*.js'
+    ];
+
+    return gulp.src(scripts)
+        .pipe(ngAnnotate())
+        .pipe(uglify())
+        .pipe(gulp.dest('./build/js'));
+});
 
 gulp.task('browser-sync', function() {
     browserSync.init(['./build/css/**/*.css', './build/js/**/*.js', './build/**/*.html'], {
@@ -94,10 +96,10 @@ gulp.task('browser-sync', function() {
     });
 });
 
-gulp.task('serve', ['img', 'scss', 'jade', 'json', 'backgroundjs', 'injectjs'], function () {
-    gulp.watch('less/**/*.scss', {cwd: './src'}, ['scss']);
+gulp.task('serve', ['img', 'scss', 'jade', 'json', 'js', 'browser-sync'], function () {
+    gulp.watch('scss/**/*.scss', {cwd: './src'}, ['scss']);
     gulp.watch('**/*.jade', {cwd: './src'}, ['jade']);
     gulp.watch('img/**/*', {cwd: './src'}, ['img']);
-    gulp.watch(['js/**/*.js', '**/*.json'], {cwd: './src'}, ['json', 'backgroundjs', 'injectjs']);
+    gulp.watch(['js/**/*.js', '**/*.json'], {cwd: './src'}, ['json', 'js']);
 });
 

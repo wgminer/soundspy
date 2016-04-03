@@ -1,0 +1,46 @@
+{
+    "users": {
+        "uuid": {
+            "username": "",
+            "following": {
+                "uuid": {
+                    "status": "requested",
+                    "name": "",
+                    "profile_picture": ""
+                },
+                "uuid": {
+                    "status": "accepted",
+                    "name": "",
+                    "profile_picture": ""
+                }
+            },
+            "followers": {
+                "uuid": {
+                    "status": "requested",
+                    "name": "",
+                    "profile_picture": ""
+                },
+                "uuid": {
+                    "status": "accepted",
+                    "name": "",
+                    "profile_picture": ""
+                }
+            },
+            "playing": {
+                "url": "",
+                "title": "",
+                "artwork": "",
+                "last_updated": ""
+            }
+        }
+    }
+}
+
+get
+    feed
+        users:following:accepted
+    you
+        profile
+        followers
+        following
+

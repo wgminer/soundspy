@@ -1,36 +1,48 @@
-chrome.extension.sendMessage({}, function(response) {
-    var readyStateCheckInterval = setInterval(function() {
-        if (document.readyState === "complete") {
-            clearInterval(readyStateCheckInterval);
+var readyStateCheckInterval = setInterval(function() {
+    if (document.readyState === "complete") {
+        clearInterval(readyStateCheckInterval);
 
-            var username = $('.userNav__username').text();
-            var currentlyPlaying = false;
+        var username = $('.userNav__username').text();
+        var currentlyPlaying = false;
 
-            var playStart = function (playing) {
-                currentlyPlaying = playing;
-                console.log("currently playing: " + playing.url);
-            }
+        var sendToBackground = function (playing) {
+            currentlyPlaying = playing;
+            console.log("currently playing: " + playing.url);
+            chrome.runtime.sendMessage(playing, function(response) {
+                console.log(response);
+            });
+        }
 
-            $('.playControls').bind('DOMSubtreeModified', function(e) {
-                if (e.target.innerHTML.length > 0) {
+        $('#transfer').bind('DOMSubtreeModified', function(e) {
+            var uid = $('#uid').text();
+            var token = $('#token').text();
+            chrome.storage.local.set({firebaseAuthToken: token, firebaseUid: uid});
+            window.location.href = 'chrome-extension://' + chrome.runtime.id + '/app.html#/feed';
+        });
 
-                    var href = $('.playbackSoundBadge__title').attr('href');
-                    
-                    if (typeof href !== 'undefined') {
+        $('.playControls').bind('DOMSubtreeModified', function(e) {
+            if (e.target.innerHTML.length > 0) {
 
-                        var playing = {
-                            user: username,
-                            url: 'https://soundcloud.com' + href,
-                            timestamp: Date.now()
-                        }
+                $title = $('.playbackSoundBadge__title');
+                $artwork = $('.playbackSoundBadge__avatar span')[0].style.backgroundImage;
+                var src = $artwork.split('"')[1].replace(/50x50/g, '200x200');;
+                var href = $title.attr('href');
 
-                        if (currentlyPlaying === false || currentlyPlaying.url !== playing.url) {
-                            playStart(playing)
-                        }
+                if (href) {
+
+                    var playing = {
+                        title: $title.attr('title'),
+                        url: 'https://soundcloud.com' + $title.attr('href'),
+                        artwork: src,
+                        timestamp: Date.now()
+                    }
+
+                    if (currentlyPlaying === false || currentlyPlaying.url !== playing.url) {
+                        sendToBackground(playing)
                     }
                 }
-            });
+            }
+        });
 
-        }
-    }, 10);
-});
+    }
+}, 10);

@@ -7,6 +7,8 @@
     "normalize": "~1.0.4",
     "lodash": "~4.6.1",
     "angularfire": "~1.2.0",
-    "firebase": "~2.4.2"
+    "firebase": "~2.4.2",
+    "angular-ui-router": "~0.2.18",
+    "angular-moment": "~0.10.3"
   }
 }

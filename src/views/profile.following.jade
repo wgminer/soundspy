@@ -1,0 +1,7 @@
+.follow(ng-repeat="user in following")
+    .follow__picture
+        img(ng-src="{{ user.picture }}", alt="{{ user.name }}'s picture")
+    p.follow__name {{ user.name }}
+    .follow__actions
+        button.button Following
+        button.button.button--danger Unfollow

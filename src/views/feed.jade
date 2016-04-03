@@ -1,0 +1,21 @@
+.playing 
+    .playing__artwork
+        img(src="{{ playing.artwork }}", alt="Your playing picture")
+    .playing__info
+        p.playing__label You last played
+        h1.playing__title {{ playing.title }}  
+
+
+.feed
+    .item(ng-repeat="user in feed", ng-if="user.playing", ng-href="{{ user.playing.url }}", target="_blank")
+        .item__picture
+            img(src="{{ user.picture ? user.picture : 'http://placehold.it/60x60' }}", alt="")
+        .item__content
+            p.item__name {{ user.name }}
+            p.item__title {{ user.playing.title }}
+
+//- code
+//-     pre {{ playing | json }}
+
+//- code
+//-     pre {{ feed | json }}
