@@ -1,5 +1,10 @@
+console.log('Soundspy injected. Waiting for page to load...');
+
 var readyStateCheckInterval = setInterval(function() {
     if (document.readyState === "complete") {
+
+        console.log('Page loaded! Awaiting something to spy on...');
+
         clearInterval(readyStateCheckInterval);
 
         var username = $('.userNav__username').text();
@@ -7,7 +12,7 @@ var readyStateCheckInterval = setInterval(function() {
 
         var sendToBackground = function (playing) {
             currentlyPlaying = playing;
-            console.log("currently playing: " + playing.url);
+            console.log('Sending "' + playing.title + '" to background. Awaiting confirmation...');
             chrome.runtime.sendMessage(playing, function(response) {
                 console.log(response);
             });

@@ -230,6 +230,10 @@ var Background = (function () {
     var module = {};
     var ref = new Firebase('https://sound-spy.firebaseio.com/users');
 
+    module.reset = function () {
+        chrome.storage.local.set({firebaseAuthToken: null, firebaseUid: null});
+    }
+
     module.save = function (uid, playing) {
         console.log(playing);
         ref.child(uid + '/playing')
@@ -254,12 +258,15 @@ var Background = (function () {
             if (authToken && uid) {
                 chrome.tabs.create({url: 'chrome-extension://' + chrome.runtime.id + '/app.html#/feed'});
             } else {
+                console.log('User not authed! Redirecting...');
                 chrome.tabs.create({url: 'http://localhost:3000/login.html'});
             }
         });
     }
 
     module.init = function () {
+
+        console.log('Initialized!');
 
         SC.initialize({
             client_id: 'b74dd64f32c066a42f13ed56d5d0e568'
@@ -270,11 +277,13 @@ var Background = (function () {
         chrome.runtime.onMessage.addListener(
             function(request, sender, sendResponse) {
                 console.log(request);
-                sendResponse('Currently playing: ' + request.url);
+                sendResponse('Got it! Attempting to send "' + request.title + '" to FireBase');
                 chrome.storage.local.get(['firebaseAuthToken', 'firebaseUid'], function(items) {
                     
                     authToken = items.firebaseAuthToken || null;
                     uid = items.firebaseUid || null;
+
+                    // console.log(uid);
                     
                     if (uid && authToken) {
                         SC.resolve(request.url)
@@ -316,7 +325,7 @@ var Background = (function () {
 
                             });
                     } else {
-                        sendResponse('User not authed!');
+                        console.log("Shoot! Auth token is not set.");
                     }
                 });
             }
@@ -327,9 +336,11 @@ var Background = (function () {
 
 })();
 
+// Background.reset();
+
 Background.init();
 
-Faker.feed();
-setInterval(function () {
-    Faker.feed();
-}, 20000);
+// Faker.feed();
+// setInterval(function () {
+//     Faker.feed();
+// }, 20000);

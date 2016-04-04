@@ -24,7 +24,9 @@ var launchLoginPopup = function () {
                 .once('value', function(snapshot) {
                     if (snapshot.exists() == false) {
                         createNewUser(authData);
-                    };  
+                    } else {
+                        console.log('User exists');
+                    }
                 });
         }
     }, {
