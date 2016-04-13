@@ -1,9 +1,8 @@
 {
-  "name": "sound-spy",
-  "version": "0.0.0",
+  "name": "Soundspy",
+  "version": "0.0.1",
   "manifest_version": 2,
-  "options_page": "app.html#/profile/options",
-  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com https://*.firebaseio-demo.com; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://*.typekit.net https://cdn.firebase.com https://*.firebaseio.com https://connect.facebook.net; object-src 'self'",
   "icons": {
     "16": "img/icon16.png",
     "48": "img/icon48.png",
@@ -13,14 +12,16 @@
   "background": {
     "scripts": [
       "js/firebase.js",
-      "js/soundcloud-sdk-3.0.0.js",
+      "js/lodash.js",
+      "js/soundcloud.js",
       "js/background.js"
     ],
     "persistent": true
   },
   "browser_action": {
     "default_icon": "img/icon19.png",
-    "default_title": "Sound Spy"
+    "default_title": "Sound Spy",
+    "default_popup": "popup.html"
   },
   "permissions": [  
     "https://soundcloud.com/",

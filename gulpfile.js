@@ -7,7 +7,7 @@ var ngAnnotate = require('gulp-ng-annotate');
 var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
 var browserSync = require('browser-sync').create();
-
+var zip = require('gulp-zip');
 
 gulp.task('img', function() {
     return gulp.src(['./src/img/**/*'])
@@ -48,7 +48,7 @@ gulp.task('jade', function() {
         .pipe(gulp.dest('./build'));
 });
 
-gulp.task('js', function () {
+gulp.task('js.background', function () {
 
     var scripts = [ 
         './libs/jquery/dist/jquery.js',
@@ -57,18 +57,16 @@ gulp.task('js', function () {
         './libs/angular/angular.js',
         './libs/angularfire/dist/angularfire.js',
         './libs/moment/moment.js',
-        './libs/angular-moment/dist/angular-moment.js',
-        './libs/angular-ui-router/release/angular-ui-router.js',
-        './src/js/*.js'
+        './libs/angular-moment/angular-moment.js',
+        './libs/angular-ui-router/release/angular-ui-router.js'
     ];
 
     return gulp.src(scripts)
-        // .pipe(ngAnnotate())
-        // .pipe(uglify())
+        .pipe(uglify())
         .pipe(gulp.dest('./build/js'));
 });
 
-gulp.task('js.min', function () {
+gulp.task('js.vendor', function () {
 
     var scripts = [ 
         './libs/jquery/dist/jquery.js',
@@ -76,12 +74,22 @@ gulp.task('js.min', function () {
         './libs/firebase/firebase.js',
         './libs/angular/angular.js',
         './libs/angularfire/dist/angularfire.js',
-        './src/js/*.js'
+        './libs/moment/moment.js',
+        './libs/angular-moment/angular-moment.js',
+        './libs/angular-ui-router/release/angular-ui-router.js'
     ];
 
     return gulp.src(scripts)
-        .pipe(ngAnnotate())
+        .pipe(concat('vendor.js'))
         .pipe(uglify())
+        .pipe(gulp.dest('./build/js'));
+});
+
+gulp.task('js', function () {
+
+    return gulp.src('./src/js/*.js')
+        // .pipe(ngAnnotate())
+        // .pipe(uglify())
         .pipe(gulp.dest('./build/js'));
 });
 
@@ -96,10 +104,20 @@ gulp.task('browser-sync', function() {
     });
 });
 
-gulp.task('serve', ['img', 'scss', 'jade', 'json', 'js', 'browser-sync'], function () {
+gulp.task('build', ['img', 'scss', 'jade', 'json', 'js.background', 'js.vendor', 'js'], function () {
+
+});
+
+gulp.task('serve', ['build', 'browser-sync'], function () {
     gulp.watch('scss/**/*.scss', {cwd: './src'}, ['scss']);
     gulp.watch('**/*.jade', {cwd: './src'}, ['jade']);
     gulp.watch('img/**/*', {cwd: './src'}, ['img']);
     gulp.watch(['js/**/*.js', '**/*.json'], {cwd: './src'}, ['json', 'js']);
 });
+
+gulp.task('zip', ['build'], function () {
+    return gulp.src('build/**/*')
+        .pipe(zip('soundspy.zip'))
+        .pipe(gulp.dest('./'));
+})
 

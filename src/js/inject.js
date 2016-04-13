@@ -3,28 +3,49 @@ console.log('Soundspy injected. Waiting for page to load...');
 var readyStateCheckInterval = setInterval(function() {
     if (document.readyState === "complete") {
 
-        console.log('Page loaded! Awaiting something to spy on...');
+        console.log('Page loaded!');
 
         clearInterval(readyStateCheckInterval);
 
-        var username = $('.userNav__username').text();
-        var currentlyPlaying = false;
+        var clearLocalStorage = function () {
+            console.log('Clearing storage');
+            chrome.storage.local.set({firebaseAuthToken: null, firebaseUid: null});
+        };
 
-        var sendToBackground = function (playing) {
-            currentlyPlaying = playing;
-            console.log('Sending "' + playing.title + '" to background. Awaiting confirmation...');
-            chrome.runtime.sendMessage(playing, function(response) {
-                console.log(response);
-            });
+        var setupAuthTransferEvent = function () {
+            console.log('Watching');
+
+            var injectTransferHandler = function () {
+                var authData = {
+                    uid: $('#uid').text(),
+                    token: $('#token').text()
+                };
+
+                if (authData.uid.length > 0 && authData.token.length > 0) {
+                    $('#transfer').unbind('DOMSubtreeModified', injectTransferHandler);
+                    console.log(authData);
+                    chrome.storage.local.set({firebaseAuthToken: authData.token, firebaseUid: authData.uid}, function () {
+                        $('#uid, #token').text('transfered');
+                    });
+                }
+
+                
+            }
+
+            $('#transfer').bind('DOMSubtreeModified', injectTransferHandler)
         }
 
-        $('#transfer').bind('DOMSubtreeModified', function(e) {
-            var uid = $('#uid').text();
-            var token = $('#token').text();
-            chrome.storage.local.set({firebaseAuthToken: token, firebaseUid: uid});
-            window.location.href = 'chrome-extension://' + chrome.runtime.id + '/app.html#/feed';
-        });
+        switch(window.location.pathname) {
+            case '/signup.html':
+            case '/login.html':
+                setupAuthTransferEvent();
+                break;
+            case '/logout.html':
+                clearLocalStorage();
+                break;
+        }
 
+        var currentlyPlaying = false;
         $('.playControls').bind('DOMSubtreeModified', function(e) {
             if (e.target.innerHTML.length > 0) {
 

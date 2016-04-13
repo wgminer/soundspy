@@ -1,0 +1,16 @@
+extends extends/site
+
+block title
+    title Sign Up | Soundspy
+
+block body
+    include includes/masthead
+    main.container.auth(ng-controller="AuthCtrl")
+        div
+            button.button.button--facebook(ng-click="login()") Sign up with Facebook
+            footer
+                p Have an account? 
+                    a(href="/login.html") Log in
+    #transfer
+            #uid
+            #token
