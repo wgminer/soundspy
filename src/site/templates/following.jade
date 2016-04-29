@@ -1,3 +1,5 @@
+.invite
+    button.button.button--block(ng-click="invite()") Invite
 .follow(ng-repeat="user in following")
     .follow__picture
         img(ng-src="{{ user.picture }}", alt="{{ user.name }}'s picture")

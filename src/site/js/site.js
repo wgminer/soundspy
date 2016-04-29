@@ -1,6 +1,6 @@
 var app = angular.module('soundspy', ['firebase', 'ui.router', 'angularMoment']);
 
-app.run(function ($rootScope, $window, $firebaseObject, $firebaseArray) {
+app.run(function ($rootScope, $window, $firebaseObject, $firebaseArray, Facebook) {
 
     var ref = new Firebase('https://sound-spy.firebaseio.com');
     $rootScope.authData = ref.getAuth();
@@ -8,6 +8,8 @@ app.run(function ($rootScope, $window, $firebaseObject, $firebaseArray) {
     if ($rootScope.authData) {
         $rootScope.user = $firebaseObject(ref.child('users/' + $rootScope.authData.uid));
     }
+
+    Facebook.init();
 
 });
 
@@ -149,6 +151,7 @@ app.controller('AuthCtrl', function ($scope, $rootScope, $window, $firebaseObjec
 
     var launchLoginPopup = function () {
         ref.authWithOAuthPopup('facebook', function(error, authData) {
+            console.log(authData);
             if (error) {
                 console.log('Login Failed!', error);
             } else {
@@ -196,15 +199,34 @@ app.config(function ($stateProvider, $urlRouterProvider) {
             url: '/followers',
             templateUrl: 'templates/followers.html'
         })
+        .state('settings', {
+            url: '/settings',
+            templateUrl: 'templates/settings.html'
+        })
         
 });
 
-app.controller('ProfileCtrl', function ($scope, $rootScope, $window, $firebaseObject, $firebaseArray) {
+app.controller('ProfileCtrl', function ($scope, $rootScope, $window, $firebaseObject, $firebaseArray, Facebook) {
+
+    console.log($rootScope.authData);
+
+    Facebook.getAppFriends($rootScope.authData.facebook.accessToken)
+        .then(function (response) {
+            console.log(response);
+        });
 
     $scope.user = false;
 
     var ref = new Firebase('https://sound-spy.firebaseio.com');
     var authData = ref.getAuth();
+
+    $scope.invite = function () {
+        console.log("yo");
+        Facebook.inviteFriends('Try out my new app Soundspy')
+            .then(function (response) {
+                console.log(response);
+            });
+    }
 
     $scope.logout = function (e) {
         ref.unauth();
@@ -224,8 +246,6 @@ app.controller('ProfileCtrl', function ($scope, $rootScope, $window, $firebaseOb
 
 app.controller('FindFriendsCtrl', function ($scope, $rootScope, $window, $firebaseObject, $firebaseArray) {
 
-    // Put all that FB stuff here
-    
 });
 
 app.directive('tabs', function ($location) {
@@ -245,4 +265,112 @@ app.directive('tabs', function ($location) {
             });
         }
     }
+});
+
+app.factory('Facebook', function($q, $window, $interval) {
+
+    var module = {};
+
+    module.isInitalized = false;
+
+    module.init = function () {
+
+        var deferred = $q.defer();
+
+        (function(d, s, id) {
+             var js, fjs = d.getElementsByTagName(s)[0];
+             if (d.getElementById(id)) {return;}
+             js = d.createElement(s); js.id = id;
+             js.src = "//connect.facebook.net/en_US/sdk.js";
+             fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+
+        $window.fbAsyncInit = function() {
+
+            FB.init({ 
+              appId: '499211296937764',
+              status: true, 
+              cookie: true, 
+              xfbml: true,
+              version: 'v2.4'
+            });
+
+            module.isInitalized = true;
+            deferred.resolve('Facebook initalized');
+
+        };
+
+        return deferred.promise;
+    }
+
+    var waitForFacebook = function (fn) {
+
+    }
+
+    module.getAppFriends = function (token) {
+
+        var deferred = $q.defer();
+
+        if (module.isInitalized) {
+            FB.api('/me/friends', 'GET', {
+                access_token: token,
+                fields: 'installed'
+            }, function(response) {
+                if (!response || response.error) {
+                    deferred.reject('An error occurred');
+                } else {
+                    deferred.resolve(response);
+                }
+            });
+        } else {
+            var i = 0;
+            var isReady = $interval(function () {
+
+                if (typeof FB != 'undefined') {
+                    $interval.cancel(isReady);
+
+                    FB.api('/me/friends', 'GET', {
+                        access_token: token,
+                        fields: 'installed'
+                    }, function(response) {
+                        if (!response || response.error) {
+                            deferred.reject('An error occurred');
+                        } else {
+                            deferred.resolve(response);
+                        }
+                    });
+                } else if (i > 100) {
+                    $interval.cancel(isReady);
+                    deferred.reject('An error occurred');
+                } else {
+                    i++;
+                }
+
+            }, 200);
+        }
+
+        
+
+        return deferred.promise;
+    }
+
+    module.inviteFriends = function (message) {
+
+        var deferred = $q.defer();
+
+        FB.ui({method: 'share',
+             href: message
+        }, function(response){
+            if (!response || response.error) {
+                deferred.reject('An error occurred');
+            } else {
+                deferred.resolve(response);
+            }
+        });
+
+        return deferred.promise;
+    }
+
+    return module;
+
 });

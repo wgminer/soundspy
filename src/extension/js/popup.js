@@ -4,7 +4,7 @@ try {
 
 }
 
-var app = angular.module('sound-spy', ['firebase', 'angularMoment']);
+var app = angular.module('soundspy', ['firebase', 'angularMoment']);
 
 app.config(function ($compileProvider) {   
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|chrome-extension):/);

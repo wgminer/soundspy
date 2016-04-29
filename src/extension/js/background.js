@@ -24,9 +24,25 @@ var Background = (function () {
             }); 
     }
 
+    module.install = function () {
+        chrome.tabs.create({url: chrome.extension.getURL('index.html/#/welcome')});
+    }
+
+    module.update = function () {
+
+    }
+
     module.init = function () {
 
         console.log('Initialized!');
+
+        chrome.runtime.onInstalled.addListener(function(details){
+            if(details.reason == "install"){
+                module.install();
+            }else if(details.reason == "update"){
+                module.update();
+            }
+        });
 
         SC.initialize({
             client_id: 'b74dd64f32c066a42f13ed56d5d0e568'
