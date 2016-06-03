@@ -14,12 +14,27 @@ body {
     a {
         float: left;
         display: block;
-        padding: .5em 0;
-        margin-right: 1em;
+        padding: calc(.5em - 2px) 0 .5em;
+        border-top: 3px solid transparent;
+        margin: -1px 1em 0 0;
+    
+        &.active {
+            border-color: $link;
+
+            &:hover {
+                border-color: $link-hover;
+            }
+        }
     }
 }
 
-.spinner {
+.container {
+    background-color: #fff;
+    overflow: auto;
+    min-height: 300px;
+}
+
+.center {
     display: flex;
     text-align: center;
     align-items: center;
@@ -29,10 +44,17 @@ body {
     background-color: #fff;
 }
 
-.feed {
-    background-color: #fff;
-    overflow: auto;
-    min-height: 300px;
+.null {
+    color: #ccc;
+
+    h2 {
+        font-weight: 400;
+        margin: 0;
+    }
+
+    p {
+        margin: 0;
+    }
 }
 
 .item {
@@ -125,5 +147,22 @@ body {
         margin: 0;
         font-size: .75rem;
         color: #999;
+    }
+}
+
+.search {
+    input {
+        font-family: inherit;
+        font-size: 1rem;
+        padding: .75rem 1rem;
+        border: 0;
+        border-bottom: $border;
+        display: block;
+        width: 100%;
+
+        &:focus {
+            outline: none;
+            border-color: $link;
+        }
     }
 }

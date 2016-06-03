@@ -88,7 +88,7 @@ gulp.task('build-site', function (cb) {
 gulp.task('serve-site', ['site.browser-sync']);
 
 gulp.task('watch-site', function () {
-    gulp.watch('scss/**/*.scss', {cwd: './src/site'}, ['sitescss']);
+    gulp.watch('scss/**/*.scss', {cwd: './src/site'}, ['site.scss']);
     gulp.watch('**/*.jade', {cwd: './src/site'}, ['site.jade']);
     gulp.watch('img/**/*', {cwd: './src/site'}, ['site.img']);
     gulp.watch(['js/**/*.js', '**/*.json'], {cwd: './src/site'}, ['site.json', 'site.js']);

@@ -1,13 +1,9 @@
 var Background = (function () {
 
     var module = {};
-    var ref = new Firebase('https://sound-spy.firebaseio.com/users');
+    var ref = new Firebase(ss_config.firebaseUrl + '/users');
 
-    module.reset = function () {
-        chrome.storage.local.set({firebaseAuthToken: null, firebaseUid: null});
-    }
-
-    module.save = function (uid, playing) {
+    var saveToFireBase = function (uid, playing) {
         console.log(playing);
         ref.child(uid + '/playing')
             .set(playing);
@@ -24,92 +20,118 @@ var Background = (function () {
             }); 
     }
 
-    module.install = function () {
-        chrome.tabs.create({url: chrome.extension.getURL('index.html/#/welcome')});
+    var initTypekit = function () {
+        chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
+            var requestHeaders = details.requestHeaders;
+            for (var i=0; i<requestHeaders.length; ++i) {
+                if (requestHeaders[i].name.toLowerCase() === 'referer') {
+                    // The request was certainly not initiated by a Chrome extension...
+                    return;
+                }
+            }
+            // Set Referer
+            requestHeaders.push({
+                name: 'referer',
+                // Host must match the domain in your Typekit kit settings
+                value: 'https://' + ss_config.id + '/'
+            });
+            return {
+                requestHeaders: requestHeaders
+            };
+        }, {
+            urls: ['*://use.typekit.net/*'],
+            types: ['stylesheet']
+        }, ['requestHeaders','blocking']);
     }
 
-    module.update = function () {
+    var initSoundcloud = function () {
+        SC.initialize({
+            client_id: ss_config.soundCloudAppId
+        });
+    }
 
+    var initMessageListener = function () {
+        chrome.runtime.onMessage.addListener(
+            function(request, sender, sendResponse) {
+                console.log(request);
+
+                if (typeof request.redirect != 'undefined') {
+                    chrome.tabs.update(sender.tab.id, {url: request.redirect});
+                } else {
+                    sendResponse('Got it! Attempting to send "' + request.title + '" to FireBase');
+                    chrome.storage.local.get(['ss_authToken', 'ss_uid'], function(items) {
+                        
+                        authToken = items.ss_authToken || null;
+                        uid = items.ss_uid || null;
+
+                        // console.log(uid);
+                        
+                        if (uid && authToken) {
+                            SC.resolve(request.url)
+                                .then(function (data) {
+                                    
+                                    if (data.artwork_url) {
+                                        var artwork_url = data.artwork_url;
+                                    } else {
+                                        var artwork_url = data.user.avatar_url;
+                                    }
+
+                                    var playing = {
+                                        url: data.permalink_url,
+                                        artwork: artwork_url,
+                                        title: data.title,
+                                        username: data.user.username,
+                                        started_at: Date.now()
+                                    }
+
+                                    console.log(data);
+
+                                    // Send to FireBase
+                                    saveToFireBase(uid, playing);
+
+                                }, function (error) {
+
+                                    var playing = {
+                                        url: request.url,
+                                        artwork: request.artwork,
+                                        title: request.title,
+                                        username: false,
+                                        started_at: Date.now()
+                                    }
+
+                                    console.log(error, playing);
+
+                                    // Send to FireBase
+                                    saveToFireBase(uid, playing);
+
+                                });
+                        } else {
+                            console.log("Shoot! Auth token is not set.");
+                        }
+                    });
+                }
+            }
+        );
     }
 
     module.init = function () {
 
-        console.log('Initialized!');
-
+        // If extension has just been installed
         chrome.runtime.onInstalled.addListener(function(details){
-            if(details.reason == "install"){
-                module.install();
-            }else if(details.reason == "update"){
-                module.update();
-            }
+            if (details.reason == 'install'){
+                chrome.storage.local.set({ss_popupState: 'onboard'});
+                chrome.tabs.create({url: chrome.extension.getURL('index.html#/welcome')});
+            };
         });
 
-        SC.initialize({
-            client_id: 'b74dd64f32c066a42f13ed56d5d0e568'
-        });
+        initTypekit();
+        initSoundcloud();
+        initMessageListener();
 
-        chrome.runtime.onMessage.addListener(
-            function(request, sender, sendResponse) {
-                console.log(request);
-                sendResponse('Got it! Attempting to send "' + request.title + '" to FireBase');
-                chrome.storage.local.get(['firebaseAuthToken', 'firebaseUid'], function(items) {
-                    
-                    authToken = items.firebaseAuthToken || null;
-                    uid = items.firebaseUid || null;
-
-                    // console.log(uid);
-                    
-                    if (uid && authToken) {
-                        SC.resolve(request.url)
-                            .then(function (data) {
-                                
-                                if (data.artwork_url) {
-                                    var artwork_url = data.artwork_url;
-                                } else {
-                                    var artwork_url = data.user.avatar_url;
-                                }
-
-                                var playing = {
-                                    url: data.permalink_url,
-                                    artwork: artwork_url,
-                                    title: data.title,
-                                    username: data.user.username,
-                                    started_at: Date.now()
-                                }
-
-                                console.log(data);
-
-                                // Send to FireBase
-                                module.save(uid, playing);
-
-                            }, function (error) {
-
-                                var playing = {
-                                    url: request.url,
-                                    artwork: request.artwork,
-                                    title: request.title,
-                                    username: false,
-                                    started_at: Date.now()
-                                }
-
-                                console.log(error, playing);
-
-                                // Send to FireBase
-                                module.save(uid, playing);
-
-                            });
-                    } else {
-                        console.log("Shoot! Auth token is not set.");
-                    }
-                });
-            }
-        );
     }
 
     return module;
 
 })();
-
-// Background.reset();
 
 Background.init();

@@ -1,10 +1,13 @@
 Flow
 
 1. Download
-2. Redirect to background.html and show "Click to get started"\
-3. Onboarding popup
+2. Redirect to index.html#/welcome and show "Click to get started"
+3. User clicks popup
 4. Slide 1: Tell what app does
-5. Slide 2. Show friends who already have it or is no friends invite friends via email
+5. Slide 2: signup button presented account
+6. User clicks signup button is sent to localhost:3000/login.html
+7. Redirected to signup successful
+5. Slide 3: Show friends who already have it or is no friends invite friends via email
 6. Show feed screen
 
 Other places

@@ -1,8 +1,12 @@
 doctype html
 html(ng-app="soundspy", lang="en")
     head
+        title Soundspy
         link(rel="stylesheet", href="css/popup.css")
+
         script(src="https://use.typekit.net/nuh3nan.js")            
+        script(src="js/typekit.js")
+
         script(src="js/jquery.js")
         script(src="js/moment.js")
         script(src="js/lodash.js")
@@ -11,24 +15,8 @@ html(ng-app="soundspy", lang="en")
         script(src="js/angularfire.js")
         script(src="js/angular-moment.js")
         script(src="js/angular-ui-router.js")
+        
+        script(src="js/config.js")
         script(src="js/popup.js")
-    body(tabindex="1")
-        .spinner(ng-show="view == 'loading'")
-            | Loading...
-        main(ng-show="view == 'feed'")
-            .feed
-                a.item(ng-repeat="user in feed track by $index", ng-href="{{ user.playing.url }}", target="_blank")
-                    .item__picture
-                        .flipper
-                            .front
-                                img(src="{{ user.picture ? user.picture : 'http://placehold.it/60x60' }}", alt="")
-                            .back
-                                img(src="{{ user.playing.artwork ? user.playing.artwork : 'http://placehold.it/60x60' }}", alt="")
-                    .item__content
-                        p.item__name {{ user.name }}
-                            span.dot &middot;
-                            span.item__time(am-time-ago="user.playing.started_at")
-                        p.item__title {{ user.playing.title }}
-        footer.footer
-            a(ng-href="{{ siteUrl }}/profile.html") Profile
-            a(ng-href="{{ siteUrl }}/find-friends.html") Find Friends
+
+    body(ui-view="")

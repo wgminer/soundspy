@@ -1,8 +1,12 @@
 doctype html
 html(ng-app="soundspy", lang="en")
     head
+        title Soundspy
         link(rel="stylesheet", href="css/index.css")
-        script(src="https://use.typekit.net/nuh3nan.js")            
+
+        script(src="https://use.typekit.net/nuh3nan.js")     
+        script(src="js/typekit.js")  
+
         script(src="js/jquery.js")
         script(src="js/moment.js")
         script(src="js/lodash.js")
@@ -11,5 +15,8 @@ html(ng-app="soundspy", lang="en")
         script(src="js/angularfire.js")
         script(src="js/angular-moment.js")
         script(src="js/angular-ui-router.js")
+        
+        script(src="js/config.js")
         script(src="js/index.js")
+
     body(ui-view="")

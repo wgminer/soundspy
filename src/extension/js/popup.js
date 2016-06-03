@@ -1,54 +1,120 @@
-try {
-    Typekit.load({ async: true });
-} catch(e) {
+var app = angular.module('soundspy', ['firebase', 'ui.router', 'angularMoment']);
 
-}
+app.config(function ($compileProvider, $stateProvider, $urlRouterProvider) {   
 
-var app = angular.module('soundspy', ['firebase', 'angularMoment']);
-
-app.config(function ($compileProvider) {   
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|chrome-extension):/);
+
+    $urlRouterProvider
+        .otherwise('/loading');
+    $stateProvider
+        .state('onboard', {
+            url: '/onboard',
+            templateUrl: 'views/onboard.html'
+        })
+        .state('find-friends', {
+            url: '/find-friends',
+            templateUrl: 'views/find-friends.html',
+            controller: 'FindFriendsCtrl'
+        })
+        .state('signup', {
+            url: '/signup',
+            templateUrl: 'views/signup.html',
+            controller: 'AuthCtrl'
+        })
+        .state('login', {
+            url: '/login',
+            templateUrl: 'views/login.html',
+            controller: 'AuthCtrl'
+        })
+        .state('feed', {
+            url: '/feed',
+            templateUrl: 'views/feed.html',
+            controller: 'FeedCtrl'
+        })
+        .state('profile', {
+            url: '/profile',
+            templateUrl: 'views/profile.html'
+        })
+        .state('loading', {
+            url: '/loading',
+            templateUrl: 'views/loading.html'
+        });
 });
 
-app.run(function ($rootScope, $firebaseArray, $window) {
+app.run(function ($rootScope, $firebaseArray, $window, $state) {
 
-    $rootScope.view = 'loading';
+    var ref = new Firebase(ss_config.firebaseUrl + '/users');
+
     $rootScope.user = false;
-    $rootScope.siteUrl = 'http://localhost:3000';
-
-    var ref = new Firebase('https://sound-spy.firebaseio.com/users');
 
     var handleNotAuthed = function () {
-        chrome.tabs.create({url: $rootScope.siteUrl + '/signup.html'});
+        chrome.storage.local.set({ss_authToken: null, ss_uid: null});
+        ref.unauth();
+        $state.go('login');
     }
 
-    var setupFeed = function (authData) {
-        $rootScope.view = 'feed';
-        $rootScope.feed = $firebaseArray(ref.child(authData.uid + '/following'));
-        $rootScope.$apply();
-        console.log("Login Succeeded!");
-    }
-
-    var handleAuth = function (authToken) {
+    var handleAuth = function (authToken, state) {
+        // Check firebase auth next
         ref.authWithCustomToken(authToken, function(error, authData) {
             if (error) {
-                handleNotAuthed()
+                handleNotAuthed();
             } else {
-                setupFeed(authData);
+                $rootScope.authData = ref.getAuth();
+                $state.go(state);
             }
         });
     }
 
-    chrome.storage.local.get(['firebaseAuthToken', 'firebaseUid'], function(items) {
-        var authToken = items.firebaseAuthToken || null;
-        var uid = items.firebaseUid || null;
-        if (authToken && uid) {
-            handleAuth(authToken);
-        } else {
-            handleNotAuthed();
-        }
-    });
+    var init = function () {
 
+        chrome.storage.local.get(['ss_authToken', 'ss_uid', 'ss_popupState'], function(items) {
+            
+            var authToken = items.ss_authToken || null;
+            var uid = items.ss_uid || null;
+            var state = items.ss_popupState || 'feed';
+
+            console.log(items);
+
+            if (state == 'onboard') {
+                $state.go(state);
+            } else {
+                if (authToken && uid) {
+                    handleAuth(authToken, state);
+                } else {
+                    handleNotAuthed();
+                }
+            }
+        });
+    }
+
+    init();
+
+    $rootScope.logout = function () {
+        handleNotAuthed();
+    }
+
+});
+
+app.controller('AuthCtrl', function ($scope, $rootScope, $window) {
+    $scope.redirectToAuth = function (messageRoute, popupState) {
+
+        chrome.storage.local.set({ss_messageRoute: messageRoute, ss_popupState: popupState});
+        // check if on the welcome tab or not else update or create new
+        chrome.tabs.update(null, {url: ss_config.siteUrl + '/authentication.html'});
+        $window.close();
+    }
+});
+
+app.controller('FeedCtrl', function ($scope, $rootScope, $firebaseArray) {
+    var ref = new Firebase(ss_config.firebaseUrl + '/users');
+    $scope.feed = $firebaseArray(ref.child($rootScope.authData.uid + '/following'));
+    console.log($scope.feed);
+});
+
+app.controller('FindFriendsCtrl', function ($scope, $rootScope, $firebaseArray) {
+    chrome.storage.local.get(['ss_friends'], function(items) {
+        console.log(items);
+    });
 });
 
 app.directive('item', function ($location) {
@@ -60,14 +126,14 @@ app.directive('item', function ($location) {
     }
 });
 
-app.directive('a', function ($location) {
-    return {
-        restrict: 'E',
-        link: function (scope, element, attrs) {
-            $(element).click(function(){
-                chrome.tabs.create({url: $(this).attr('href')});
-                return false;
-            });
-        }
-    }
-});
+// app.directive('a', function ($location) {
+//     return {
+//         restrict: 'E',
+//         link: function (scope, element, attrs) {
+//             $(element).click(function(){
+//                 chrome.tabs.create({url: $(this).attr('href')});
+//                 return false;
+//             });
+//         }
+//     }
+// });

@@ -1,9 +1,3 @@
-try {
-    Typekit.load({ async: true });
-} catch(e) {
-    console.log(e);
-}
-
 var app = angular.module('soundspy', ['firebase', 'ui.router', 'angularMoment']);
 
 app.config(function ($compileProvider) {   
@@ -15,17 +9,26 @@ app.config(function ($stateProvider, $urlRouterProvider) {
     $urlRouterProvider
         .otherwise('/following');
     $stateProvider
-        .state('following', {
-            url: '/following',
-            templateUrl: 'templates/following.html'
+        .state('options', {
+            url: '/options',
+            templateUrl: 'views/options.html',
+            controller: 'OptionsCtrl'
         })
-        .state('followers', {
-            url: '/followers',
-            templateUrl: 'templates/followers.html'
-        })
-        .state('settings', {
-            url: '/settings',
-            templateUrl: 'templates/settings.html'
-        })
-        
+        .state('message', {
+            url: '/:message',
+            templateUrl: 'views/message.html',
+            controller: 'MessageCtrl'
+        });
+});
+
+app.controller('OptionsCtrl', function ($scope, $rootScope, $stateParams, $timeout) {
+    
+    $scope.message = $stateParams.message;
+
+});
+
+app.controller('MessageCtrl', function ($scope, $rootScope, $stateParams, $timeout) {
+    
+    $scope.message = $stateParams.message;
+
 });

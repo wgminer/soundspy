@@ -12,7 +12,7 @@ var sass = require('gulp-sass');
 // var concat = require('gulp-concat');
 
 gulp.task('extension.clean', function () {
-    return del('./build/extension/**/*');
+    return del(['./build/extension/**/*', './build/extension.zip']);
 });
 
 gulp.task('extension.img', function() {
@@ -44,7 +44,7 @@ gulp.task('extension.scss', function () {
 });
 
 gulp.task('extension.jade', function() {
-    return gulp.src('./src/extension/*.jade')
+    return gulp.src('./src/extension/**/*.jade')
         .pipe(jade())
         .on('error', function (err) {
             gutil.log(gutil.colors.red(err));

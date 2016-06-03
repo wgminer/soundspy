@@ -1,4 +1,4 @@
-var app = angular.module('soundspy', ['firebase', 'ui.router', 'angularMoment']);
+var app = angular.module('soundspy', ['firebase', 'angularMoment']);
 
 app.run(function ($rootScope, $window, $firebaseObject, $firebaseArray, Facebook) {
 
@@ -125,32 +125,30 @@ app.controller('IndexCtrl', function ($scope, $rootScope, $interval, $timeout) {
 
 app.controller('AuthCtrl', function ($scope, $rootScope, $window, $firebaseObject, $firebaseArray) {
 
+    var appId = location.search.split('id=')[1];
+    var callbackUrl = 'chrome-extension://' + appId + '/index.html#/login-successful';
     var ref = new Firebase('https://sound-spy.firebaseio.com/users');
+
+    var navigateToExtension = function () {
+        chrome.tabs.create({url: callbackUrl});
+    }
 
     var injectAuthData = function (authData, callback) {
         $('#uid').text(authData.uid);
         $('#token').text(authData.token);
-        $('#transfer').bind('DOMSubtreeModified', function(e) {
-            console.log('Callback received');
-            if ($('#uid').text() == 'transfered' && $('#token').text() == 'transfered' ) {
-                callback();
-                $('#transfer').unbind('DOMSubtreeModified');
-            }
-        });
+        // now we wait for redirect from inject script...
     }; 
 
-    var createNewUser = function (authData) {
+    var createNewUser = function (authData, callback) {
         ref.child(authData.uid).set({
             'name': authData.facebook.displayName,
             'email': authData.facebook.email,
             'picture': authData.facebook.profileImageURL
-        }, function () {
-            $window.location.href = 'http://localhost:3000/find-friends.html';
-        });
+        }, callback(authData));
     };
 
-    var launchLoginPopup = function () {
-        ref.authWithOAuthPopup('facebook', function(error, authData) {
+    var startLoginFlow = function () {
+        ref.authWithOAuthRedirect('facebook', function(error, authData) {
             console.log(authData);
             if (error) {
                 console.log('Login Failed!', error);
@@ -159,13 +157,9 @@ app.controller('AuthCtrl', function ($scope, $rootScope, $window, $firebaseObjec
                 ref.child(authData.uid)
                     .on('value', function(snapshot) {
                         if (snapshot.exists() == false) {
-                            injectAuthData(authData, function () {
-                                createNewUser(authData);
-                            });
+                            createNewUser(authData, injectAuthData);
                         } else {
-                            injectAuthData(authData, function () {
-                                $window.location.href = 'http://localhost:3000/profile.html';
-                            });
+                            injectAuthData(authData);
                         }
                     });
             }
@@ -174,37 +168,41 @@ app.controller('AuthCtrl', function ($scope, $rootScope, $window, $firebaseObjec
         });
     };
 
-    $scope.login = function () {
+    var init = function () {
         if ($rootScope.authData) {
+            console.log($rootScope.authData);
             injectAuthData($rootScope.authData, function () {
-                $window.location.href = 'http://localhost:3000/profile.html';
+                console.log(callbackUrl);
+                navigateToExtension();
             });
         } else {
-            launchLoginPopup();
+            startLoginFlow();
         }
     }
 
+    init();
+
 });
 
-app.config(function ($stateProvider, $urlRouterProvider) {
+// app.config(function ($stateProvider, $urlRouterProvider) {
 
-    $urlRouterProvider
-        .otherwise('/following');
-    $stateProvider
-        .state('following', {
-            url: '/following',
-            templateUrl: 'templates/following.html'
-        })
-        .state('followers', {
-            url: '/followers',
-            templateUrl: 'templates/followers.html'
-        })
-        .state('settings', {
-            url: '/settings',
-            templateUrl: 'templates/settings.html'
-        })
+//     $urlRouterProvider
+//         .otherwise('/following');
+//     $stateProvider
+//         .state('following', {
+//             url: '/following',
+//             templateUrl: 'templates/following.html'
+//         })
+//         .state('followers', {
+//             url: '/followers',
+//             templateUrl: 'templates/followers.html'
+//         })
+//         .state('settings', {
+//             url: '/settings',
+//             templateUrl: 'templates/settings.html'
+//         })
         
-});
+// });
 
 app.controller('ProfileCtrl', function ($scope, $rootScope, $window, $firebaseObject, $firebaseArray, Facebook) {
 
